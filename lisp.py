@@ -1,8 +1,5 @@
 import math
 import operator as op
-
-Env = dict          # An environment is a mapping of {variable: value}
-
 def standard_env():
     "An environment with some Scheme standard procedures."
     env = Env()
@@ -76,12 +73,14 @@ def read_from_tokens(tokens):
         return atom(token)
 
 def atom(token):
-    "Numbers become numbers; every other token is a symbol."
-    try: return int(token)
-    except ValueError:
-        try: return float(token)
-        except ValueError:
-            return Symbol(token)
+	"Numbers become numbers; every other token is a symbol."
+	try:
+		return int(token)
+	except ValueError:
+		try:
+			return float(token)
+		except ValueError:
+			return str(token)
 
 def eval(x, env=global_env):
     "Evaluate an expression in an environment."
@@ -104,52 +103,49 @@ def eval(x, env=global_env):
 def repl(prompt='lis.py> '):
 	"A prompt-read-eval-print loop."
 	while True:
-		try:
 			rawInput=input(prompt)
 			if(rawInput == "quit"):
 				print("hey")
 				break
 			parsestring = parse(rawInput)
 			val = eval(parsestring)
+			print(val)
 			if val is not None: 
 				print(schemestr(val))
-		except:
-			print("Error")
-			break
 def schemestr(exp):
     "Convert a Python object back into a Scheme-readable string."
-    if isinstance(exp, List):
+    if isinstance(exp, list):
         return '(' + ' '.join(map(schemestr, exp)) + ')' 
     else:
         return str(exp)
 def eval(x, env=global_env):
-    "Evaluate an expression in an environment."
-    if isinstance(x, Symbol):      # variable reference
-        return env.find(x)[x]
-    elif not isinstance(x, List):  # constant literal
-        return x                
-    elif x[0] == 'quote':          # quotation
-        (_, exp) = x
-        return exp
-    elif x[0] == 'if':             # conditional
-        (_, test, conseq, alt) = x
-        exp = (conseq if eval(test, env) else alt)
-        return eval(exp, env)
-    elif x[0] == 'define':         # definition
-        (_, var, exp) = x
-        env[var] = eval(exp, env)
-    elif x[0] == 'set!':           # assignment
-        (_, var, exp) = x
-        env.find(var)[var] = eval(exp, env)
-    elif x[0] == 'lambda':         # procedure
-        (_, parms, body) = x
-        return Procedure(parms, body, env)
-    else:                          # procedure call
-        proc = eval(x[0], env)
-        args = [eval(arg, env) for arg in x[1:]]
-        return proc(*args)
-
-Symbol = str          # A Scheme Symbol is implemented as a Python str
-List   = list         # A Scheme List is implemented as a Python list
-Number = (int, float) # A Scheme Number is implemented as a Python int or float
-repl()
+	"Evaluate an expression in an environment."
+	if isinstance(x, str):      # variable reference\
+		return env.find(x)[x]
+	elif not isinstance(x, list):  # constant literal
+		return x
+	elif x[0] == 'quote':          # quotation
+		(_, exp) = x
+		return exp
+	elif x[0] == 'if':             # conditional
+		(_, test, conseq, alt) = x
+		exp = (conseq if eval(test, env) else alt)
+		return eval(exp, env)
+	elif x[0] == 'define':         # definition
+		(_, var, exp) = x
+		env[var] = eval(exp, env)
+	elif x[0] == 'set!':           # assignment
+		(_, var, exp) = x
+		env.find(var)[var] = eval(exp, env)
+	elif x[0] == 'lambda':         # procedure
+		(_, parms, body) = x 
+		return Procedure(parms, body, env)
+	elif x[0] == 'fun':         # procedure
+		(_, parms, body) = x
+		return Procedure(parms, body, env)
+	else:                          # procedure call
+		proc = eval(x[0], env)
+		args = [eval(arg, env) for arg in x[1:]]
+		return proc(*args)
+if __name__ == "__main__":
+	repl()
