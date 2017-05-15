@@ -102,12 +102,20 @@ def eval(x, env=global_env):
         return proc(*args)
 
 def repl(prompt='lis.py> '):
-    "A prompt-read-eval-print loop."
-    while True:
-        val = eval(parse(input(prompt)))
-        if val is not None: 
-            print(schemestr(val))
-
+	"A prompt-read-eval-print loop."
+	while True:
+		try:
+			rawInput=input(prompt)
+			if(rawInput == "quit"):
+				print("hey")
+				break
+			parsestring = parse(rawInput)
+			val = eval(parsestring)
+			if val is not None: 
+				print(schemestr(val))
+		except:
+			print("Error")
+			break
 def schemestr(exp):
     "Convert a Python object back into a Scheme-readable string."
     if isinstance(exp, List):
@@ -144,8 +152,4 @@ def eval(x, env=global_env):
 Symbol = str          # A Scheme Symbol is implemented as a Python str
 List   = list         # A Scheme List is implemented as a Python list
 Number = (int, float) # A Scheme Number is implemented as a Python int or float
-while(True):
-	try:
-		repl()
-	except:
-		print("Error")
+repl()
