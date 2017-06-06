@@ -1,14 +1,12 @@
 import re
 from Env import *
 
-#reservedWords = ['Plus','Minus','Multiply','Divide','Modulus','Greater','Smaller','Equal','And','Or','Not']
 numOp = ['+','-','*','/','mod','>','<','=']
 logicOp = ['and','or','not']
 otherOp = ['if','define','fun']
 Op = numOp + logicOp
 reservedWords = Op + otherOp 
 checkWords = logicOp + otherOp + ['mod']
-#reservedWords = reservedWords + numOp + logicOp
 eof_object = Symbol('#<eof-object>')
 error_object = Symbol('#<error-object>')
 class Input_Error(BaseException):
@@ -22,7 +20,7 @@ def Error(msg):
     return None 
 
 def rangeCheck(exps):
-    check = 3
+    check = 5
     if isinstance(exps,list):
         for exp in exps:
             if isinstance(exp,list):
@@ -37,6 +35,8 @@ def rangeCheck(exps):
                         return 2
                     if a is None and not exp in reservedWords:
                         return 1
+                elif isinstance(exp,float):
+                    return 3
     else:
         if not isinstance(exps,bool):
             if isinstance(exps, int):
@@ -46,8 +46,12 @@ def rangeCheck(exps):
                 a = re.match('^[a-z]([a-z]|[0-9]|-)*$',exps)
                 if exps is error_object:
                     return 2
-                if a is None and not exps in Op:
+                if exps in reservedWords:
+                    return 4
+                if a is None and not exps in reservedWords:
                     return 1
+            elif isinstance(exp,float):
+                    return 3
     return check
 
 def boolCheck(exps):

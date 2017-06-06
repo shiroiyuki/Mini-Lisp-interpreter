@@ -40,9 +40,9 @@ def read(inport):
                 else:
                     L.append(read_ahead(token))
         elif ')' == token:
-            raise SyntaxError('unexpected )')
+            raise SyntaxError('syntax error.')
         elif token is eof_object:
-            raise SyntaxError('unexpected EOF in list')
+            raise SyntaxError('syntax error.')
         else:
             return atom(token)
     token1 = inport.next_token()
@@ -62,7 +62,8 @@ def atom(token):
                     return error_object
         return int(token)
     except ValueError:
-        return Sym(token)
+        try: return float(token)
+        except ValueError: return Sym(token)
 
 def load(filename):
     repl(InPort(open(filename)))
@@ -74,23 +75,29 @@ def repl(inport=InPort(sys.stdin)):
             if x is eof_object:
                 return
             elif rangeCheck(x) == 0:
-                raise Exception("Out of range!")
+                raise Exception("Out of range.")
             elif rangeCheck(x) == 1:
-                raise Exception("ID Error")
+                raise Exception("ID Error.")
             elif rangeCheck(x) == 2:
                 raise Input_Error("Expect ID.")
+            elif rangeCheck(x) == 3:
+                raise Input_Error("Input Error: cannot input float type")
+            elif rangeCheck(x) == 4:
+                raise Exception("syntax error.")
             val = eval(x)
         except Exception as e:
             #print('%s: %s' % (type(e).__name__, e))
-            print('Error: Expect ID.')
+            print(e)
         except Input_Error as e:
-            print('Error: {}'.format(e))
+            print(e)
 
 global_env = standard_globals(Env())
 
 def eval(x, env = global_env):
     while True:
-        if isinstance(x, Symbol):
+        if x is None:
+            return None
+        elif isinstance(x, Symbol):
             return env.find(x)[x]
         elif not isinstance(x, list):   
             return x
@@ -112,17 +119,21 @@ def eval(x, env = global_env):
                 if isinstance(exp,list):
                     if(exp[0] is _fun):
                         (_, vars, exps) = exp
-                        for i in exps:
-                            if  i in checkWords:
-                                return Error("you cannot use {} as ID".format(i))
+                        if isinstance(vars,list):
+                            for i in vars:
+                                if  i in checkWords:
+                                    return Error("you cannot use {} as ID".format(i))
                 env[var] = eval(exp, env)               
                 return None
         elif x[0] is _fun:    
             (_, vars, exp) = x
-            for i in exp:
-                if  i in checkWords:
-                    return Error("you cannot use {} as ID".format(i))
+            #try:
+                #for i in exp:
+                    #if  i in checkWords:
+                        #return Error("you cannot use {} as ID".format(i))
             return Procedure(vars, exp, env)
+            #except:
+                #return Procedure(vars, exp, env)
         else:
             exps = [eval(exp, env) for exp in x]
             proc = exps.pop(0)
@@ -137,47 +148,47 @@ def eval(x, env = global_env):
                             if boolCheck(exps):
                                 ans = 1;
                             else:
-                                return Error("TypeError");
+                                return Error("Type Error: Expect ‘number’ but got ‘boolean’.");
                         elif x[0] == '+':
                             if boolCheck(exps):
                                 ans = 0;
                             else:
-                                return Error("TypeError");
+                                return Error("Type Error: Expect ‘number’ but got ‘boolean’.");
                         elif x[0] == 'and':
                             if not numCheck(exps):
-                                return Error("TypeError")
+                                return Error("Type Error: Expect ‘boolean’ but got ‘number’.")
                             ans = True;
                         elif x[0] == 'or':
                             if not numCheck(exps):
-                                return Error("TypeError")
+                                return Error("Type Error: Expect ‘boolean’ but got ‘number’.")
                             ans = False;
                         elif x[0] == '=':
                             if not boolCheck(exps):
-                                return Error("TypeError")
+                                return Error("Type Error: Expect ‘number’ but got ‘boolean’.")
                             ans = exps[0]
                         for i in exps:
                             ans = proc(ans,i)
                     elif tmp == 2:
                         if x[0] in numOp:
                             if not boolCheck(exps):
-                                return Error("TypeError")
+                                return Error("Type Error: Expect ‘number’ but got ‘boolean’.")
                         elif x[0] in logicOp:
                             if not numCheck(exps):
-                                return Error("TypeError")
+                                return Error("Type Error: Expect ‘boolean’ but got ‘number’.")
                         ans = proc(*exps)
                     else:
                         if x[0] == 'not':
                             if not isinstance(exps[0],bool):
-                                return Error("TypeError")
+                                return Error("Type Error: Expect ‘boolean’ but got ‘number’.")
                         try:
                             ans = proc(*exps)
                             #if x[0] == 'print-num' or x[0] == 'print-bool' and not isinstance(ans,str):
                                 #print(to_string(ans))
                         except:
-                            return Error("SyntaxError")
+                            return Error("syntax error.")
                     return ans
             except Exception as e:
-                return Error("SyntaxError")
+                return Error("syntax error")
 
 def require(x, predicate, msg = "wrong length"):
     if not predicate:

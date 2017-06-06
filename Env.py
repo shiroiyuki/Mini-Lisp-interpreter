@@ -1,7 +1,7 @@
 import sys
 import operator as op
 
-sys.tracebacklimit = None
+#sys.tracebacklimit = None
 
 class Symbol(str):
     pass
@@ -63,12 +63,16 @@ def to_string(x):
         return '(' + ' '.join(map(to_string, x)) + ')'
     else:
         return str(x)
-
+def printStr(x):
+    if x is None or isinstance(x,str):
+        return None
+    else:
+        print(to_string(x))
 def standard_globals(self):
     self.update({
      '+': op.add, '-': op.sub, '*': op.mul, '/': op.floordiv, 'not': op.not_,
-     '>': op.gt, '<': op.lt, '>=': op.ge, '<=': op.le, '=': op.eq,'mod':op.mod,
+     '>': op.gt, '<': op.lt, '=': op.eq,'mod':op.mod,
      'and':op.and_, 'or': op.or_,
-     'print-num': lambda x: print(to_string(x)) if not isinstance(x,bool) else raise_(x),
-     'print-bool': lambda x: print(to_string(x)) if isinstance(x, bool) else raise_(x)})
+     'print-num': lambda x: printStr(x) if not isinstance(x,bool) else raise_(x),
+     'print-bool': lambda x: printStr(x) if isinstance(x, bool) else raise_(x)})
     return self
